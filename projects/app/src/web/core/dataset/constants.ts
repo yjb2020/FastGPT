@@ -1,4 +1,9 @@
 import { defaultQAModels, defaultVectorModels } from '@fastgpt/global/core/ai/model';
+import {
+  DatasetCollectionTypeEnum,
+  DatasetTypeEnum,
+  TrainingModeEnum
+} from '@fastgpt/global/core/dataset/constants';
 import type {
   DatasetCollectionItemType,
   DatasetItemType
@@ -11,7 +16,7 @@ export const defaultDatasetDetail: DatasetItemType = {
   teamId: '',
   tmbId: '',
   updateTime: new Date(),
-  type: 'dataset',
+  type: DatasetTypeEnum.dataset,
   avatar: '/icon/logo.svg',
   name: '',
   intro: '',
@@ -34,7 +39,7 @@ export const defaultCollectionDetail: DatasetCollectionItemType = {
     teamId: '',
     tmbId: '',
     updateTime: new Date(),
-    type: 'dataset',
+    type: DatasetTypeEnum.dataset,
     avatar: '/icon/logo.svg',
     name: '',
     intro: '',
@@ -45,13 +50,13 @@ export const defaultCollectionDetail: DatasetCollectionItemType = {
   },
   parentId: '',
   name: '',
-  type: 'file',
+  type: DatasetCollectionTypeEnum.file,
   updateTime: new Date(),
   canWrite: false,
   sourceName: '',
   sourceId: '',
   createTime: new Date(),
-  trainingType: 'chunk',
+  trainingType: TrainingModeEnum.chunk,
   chunkSize: 0
 };
 

@@ -10,11 +10,10 @@ import styles from './index.module.scss';
 import dynamic from 'next/dynamic';
 
 import { Link, Button } from '@chakra-ui/react';
-import MyTooltip from '../MyTooltip';
+import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
 import { useTranslation } from 'next-i18next';
 import { EventNameEnum, eventBus } from '@/web/common/utils/eventbus';
 import MyIcon from '@fastgpt/web/components/common/Icon';
-import { getFileAndOpen } from '@/web/core/dataset/utils';
 import { MARKDOWN_QUOTE_SIGN } from '@fastgpt/global/core/chat/constants';
 
 const CodeLight = dynamic(() => import('./CodeLight'), { ssr: false });
@@ -132,7 +131,7 @@ const A = React.memo(function A({ children, ...props }: any) {
     );
   }
 
-  // quote link
+  // quote link(未使用)
   if (children?.length === 1 && typeof children?.[0] === 'string') {
     const text = String(children);
     if (text === MARKDOWN_QUOTE_SIGN && props.href) {
@@ -147,7 +146,7 @@ const A = React.memo(function A({ children, ...props }: any) {
             _hover={{
               color: 'primary.700'
             }}
-            onClick={() => getFileAndOpen(props.href)}
+            // onClick={() => getCollectionSourceAndOpen(props.href)}
           />
         </MyTooltip>
       );

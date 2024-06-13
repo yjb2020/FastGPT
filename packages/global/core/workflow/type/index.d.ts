@@ -20,14 +20,16 @@ import { RuntimeNodeItemType } from '../runtime/type';
 import { PluginTypeEnum } from '../../plugin/constants';
 import { RuntimeEdgeItemType, StoreEdgeItemType } from './edge';
 import { NextApiResponse } from 'next';
+import { AppDetailType, AppSchema } from '../../app/type';
 
 export type FlowNodeCommonType = {
-  flowNodeType: `${FlowNodeTypeEnum}`; // render node card
+  flowNodeType: FlowNodeTypeEnum; // render node card
 
   avatar?: string;
   name: string;
   intro?: string; // template list intro
   showStatus?: boolean; // chatting response step status
+  version: string;
 
   // data
   inputs: FlowNodeInputItemType[];
@@ -63,6 +65,7 @@ export type FlowNodeTemplateType = FlowNodeCommonType & {
   // action
   forbidDelete?: boolean; // forbid delete
   unique?: boolean;
+  nodeVersion?: string;
 };
 export type FlowNodeItemType = FlowNodeTemplateType & {
   nodeId: string;
@@ -103,8 +106,8 @@ export type NodeSourceNodeItemType = {
 /* --------------- function type -------------------- */
 export type SelectAppItemType = {
   id: string;
-  name: string;
-  logo: string;
+  // name: string;
+  // logo?: string;
 };
 
 /* agent */
@@ -113,6 +116,7 @@ export type ClassifyQuestionAgentItemType = {
   key: string;
 };
 export type ContextExtractAgentItemType = {
+  valueType: 'string' | 'number' | 'boolean';
   desc: string;
   key: string;
   required: boolean;
@@ -128,7 +132,7 @@ export type ChatDispatchProps = {
   teamId: string;
   tmbId: string;
   user: UserModelSchema;
-  appId?: string;
+  app: AppDetailType | AppSchema;
   chatId?: string;
   responseChatItemId?: string;
   histories: ChatItemType[];

@@ -10,7 +10,7 @@ import Avatar from '../Avatar';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import { useTranslation } from 'next-i18next';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
-import MyTooltip from '../MyTooltip';
+import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
 import { getDocPath } from '@/web/common/system/doc';
 
 export enum NavbarTypeEnum {
@@ -102,7 +102,13 @@ const Navbar = ({ unread }: { unread: number }) => {
         cursor={'pointer'}
         onClick={() => router.push('/account')}
       >
-        <Avatar w={'36px'} h={'36px'} src={userInfo?.avatar} fallbackSrc={HUMAN_ICON} />
+        <Avatar
+          w={'36px'}
+          h={'36px'}
+          src={userInfo?.avatar}
+          fallbackSrc={HUMAN_ICON}
+          borderRadius={'50%'}
+        />
       </Box>
       {/* 导航列表 */}
       <Box flex={1}>

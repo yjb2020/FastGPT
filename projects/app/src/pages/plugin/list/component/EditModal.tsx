@@ -10,7 +10,7 @@ import { useSystemStore } from '@/web/common/system/useSystemStore';
 import { useRequest } from '@fastgpt/web/hooks/useRequest';
 import { delOnePlugin, postCreatePlugin, putUpdatePlugin } from '@/web/core/plugin/api';
 import Avatar from '@/components/Avatar';
-import MyTooltip from '@/components/MyTooltip';
+import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
 import MyModal from '@fastgpt/web/components/common/MyModal';
 import { useTranslation } from 'next-i18next';
 import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
@@ -20,6 +20,7 @@ import { MongoImageTypeEnum } from '@fastgpt/global/common/file/image/constants'
 import { PluginTypeEnum } from '@fastgpt/global/core/plugin/constants';
 import { useWorkflowStore } from '@/web/core/workflow/store/workflow';
 import { EditFormType } from './type';
+import { FlowNodeTypeEnum } from '@fastgpt/global/core/workflow/node/constant';
 const nanoid = customAlphabet('abcdefghijklmnopqrstuvwxyz1234567890', 12);
 
 export const defaultForm: EditFormType = {
@@ -33,12 +34,13 @@ export const defaultForm: EditFormType = {
       nodeId: nanoid(),
       name: '自定义插件输入',
       avatar: '/imgs/workflow/input.png',
-      flowNodeType: 'pluginInput',
+      flowNodeType: FlowNodeTypeEnum.pluginInput,
       showStatus: false,
       position: {
         x: 616.4226348688949,
         y: -165.05298493910115
       },
+      version: '481',
       inputs: [],
       outputs: []
     },
@@ -46,12 +48,13 @@ export const defaultForm: EditFormType = {
       nodeId: nanoid(),
       name: '自定义插件输出',
       avatar: '/imgs/workflow/output.png',
-      flowNodeType: 'pluginOutput',
+      flowNodeType: FlowNodeTypeEnum.pluginOutput,
       showStatus: false,
       position: {
         x: 1607.7142331269126,
         y: -151.8669210746189
       },
+      version: '481',
       inputs: [],
       outputs: []
     }

@@ -1,21 +1,28 @@
 import React, { useEffect, useMemo, useTransition } from 'react';
-import { Box, Flex, Grid, BoxProps, useTheme, useDisclosure, Button } from '@chakra-ui/react';
-import { AddIcon, QuestionOutlineIcon, SmallAddIcon } from '@chakra-ui/icons';
+import {
+  Box,
+  Flex,
+  Grid,
+  BoxProps,
+  useTheme,
+  useDisclosure,
+  Button,
+  HStack
+} from '@chakra-ui/react';
+import { AddIcon, SmallAddIcon } from '@chakra-ui/icons';
 import { useFieldArray, UseFormReturn } from 'react-hook-form';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
 import type { AppSimpleEditFormType } from '@fastgpt/global/core/app/type.d';
-import { welcomeTextTip } from '@fastgpt/global/core/workflow/template/tip';
 import { useRequest } from '@fastgpt/web/hooks/useRequest';
 import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
 import { useRouter } from 'next/router';
 import { useTranslation } from 'next-i18next';
 import { AppTypeEnum } from '@fastgpt/global/core/app/constants';
 import { useDatasetStore } from '@/web/core/dataset/store/dataset';
-import { useAppStore } from '@/web/core/app/store/useAppStore';
 import { form2AppWorkflow } from '@/web/core/app/utils';
 
 import dynamic from 'next/dynamic';
-import MyTooltip from '@/components/MyTooltip';
+import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
 import Avatar from '@/components/Avatar';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import VariableEdit from '@/components/core/app/VariableEdit';
@@ -30,6 +37,10 @@ import { TTSTypeEnum } from '@/web/core/app/constants';
 import { getSystemVariables } from '@/web/core/app/utils';
 import { useUpdate } from 'ahooks';
 import { useI18n } from '@/web/context/I18n';
+import { useContextSelector } from 'use-context-selector';
+import { AppContext } from '@/web/core/app/context/appContext';
+import QuestionTip from '@fastgpt/web/components/common/MyTooltip/QuestionTip';
+import FormLabel from '@fastgpt/web/components/common/MyBox/FormLabel';
 
 const DatasetSelectModal = dynamic(() => import('@/components/core/app/DatasetSelectModal'));
 const DatasetParamsModal = dynamic(() => import('@/components/core/app/DatasetParamsModal'));
@@ -37,6 +48,11 @@ const ToolSelectModal = dynamic(() => import('./ToolSelectModal'));
 const TTSSelect = dynamic(() => import('@/components/core/app/TTSSelect'));
 const QGSwitch = dynamic(() => import('@/components/core/app/QGSwitch'));
 const WhisperConfig = dynamic(() => import('@/components/core/app/WhisperConfig'));
+const InputGuideConfig = dynamic(() => import('@/components/core/app/InputGuideConfig'));
+const ScheduledTriggerConfig = dynamic(
+  () => import('@/components/core/app/ScheduledTriggerConfig')
+);
+const WelcomeTextConfig = dynamic(() => import('@/components/core/app/WelcomeTextConfig'));
 
 const BoxStyles: BoxProps = {
   px: 5,
@@ -47,7 +63,7 @@ const BoxStyles: BoxProps = {
 const LabelStyles: BoxProps = {
   w: ['60px', '100px'],
   flexShrink: 0,
-  fontSize: ['sm', 'md']
+  fontSize: 'xs'
 };
 
 const EditForm = ({
@@ -64,7 +80,7 @@ const EditForm = ({
   const { t } = useTranslation();
   const { appT } = useI18n();
 
-  const { publishApp, appDetail } = useAppStore();
+  const { appDetail, publishApp } = useContextSelector(AppContext, (v) => v);
 
   const { allDatasets } = useDatasetStore();
   const { llmModelList } = useSystemStore();
@@ -73,10 +89,23 @@ const EditForm = ({
 
   const { setValue, getValues, handleSubmit, control, watch } = editForm;
 
-  const { fields: datasets, replace: replaceKbList } = useFieldArray({
+  const { fields: datasets, replace: replaceDatasetList } = useFieldArray({
     control,
     name: 'dataset.datasets'
   });
+  const selectDatasets = useMemo(
+    () => allDatasets.filter((item) => datasets.find((dataset) => dataset.datasetId === item._id)),
+    [allDatasets, datasets]
+  );
+  useEffect(() => {
+    if (selectDatasets.length !== datasets.length) {
+      replaceDatasetList(
+        selectDatasets.map((item) => ({
+          datasetId: item._id
+        }))
+      );
+    }
+  }, [datasets, replaceDatasetList, selectDatasets]);
 
   const {
     isOpen: isOpenDatasetSelect,
@@ -101,22 +130,19 @@ const EditForm = ({
   const aiSystemPrompt = watch('aiSettings.systemPrompt');
   const selectLLMModel = watch('aiSettings.model');
   const datasetSearchSetting = watch('dataset');
-  const variables = watch('userGuide.variables');
+  const variables = watch('chatConfig.variables');
 
-  const formatVariables = useMemo(
-    () => formatEditorVariablePickerIcon([...getSystemVariables(t), ...variables]),
+  const formatVariables: any = useMemo(
+    () => formatEditorVariablePickerIcon([...getSystemVariables(t), ...(variables || [])]),
     [t, variables]
   );
-  const searchMode = watch('dataset.searchMode');
-  const tts = getValues('userGuide.tts');
-  const whisperConfig = getValues('userGuide.whisper');
-  const postQuestionGuide = getValues('userGuide.questionGuide');
+  const tts = getValues('chatConfig.ttsConfig');
+  const whisperConfig = getValues('chatConfig.whisperConfig');
+  const postQuestionGuide = getValues('chatConfig.questionGuide');
   const selectedTools = watch('selectedTools');
-
-  const selectDatasets = useMemo(
-    () => allDatasets.filter((item) => datasets.find((dataset) => dataset.datasetId === item._id)),
-    [allDatasets, datasets]
-  );
+  const inputGuideConfig = watch('chatConfig.chatInputGuide');
+  const scheduledTriggerConfig = watch('chatConfig.scheduledTriggerConfig');
+  const searchMode = watch('dataset.searchMode');
 
   const tokenLimit = useMemo(() => {
     return llmModelList.find((item) => item.model === selectLLMModel)?.quoteMaxToken || 3000;
@@ -126,10 +152,10 @@ const EditForm = ({
   const { mutate: onSubmitPublish, isLoading: isSaving } = useRequest({
     mutationFn: async (data: AppSimpleEditFormType) => {
       const { nodes, edges } = form2AppWorkflow(data);
-
-      await publishApp(appDetail._id, {
+      await publishApp({
         nodes,
         edges,
+        chatConfig: data.chatConfig,
         type: AppTypeEnum.simple
       });
     },
@@ -165,14 +191,10 @@ const EditForm = ({
           boxShadow: '0 2px 10px rgba(0,0,0,0.12)'
         })}
       >
-        <Flex alignItems={'center'}>
-          <Box fontSize={['md', 'xl']} color={'myGray.800'}>
-            {t('core.app.App params config')}
-          </Box>
-          <MyTooltip label={t('core.app.Simple Config Tip')} forceShow>
-            <MyIcon name={'common/questionLight'} color={'myGray.500'} ml={2} />
-          </MyTooltip>
-        </Flex>
+        <HStack>
+          <Box color={'myGray.900'}>{t('core.app.App params config')}</Box>
+          <QuestionTip label={t('core.app.Simple Config Tip')} />
+        </HStack>
         <Button
           isLoading={isSaving}
           size={['sm', 'md']}
@@ -202,9 +224,9 @@ const EditForm = ({
           <Box {...BoxStyles}>
             <Flex alignItems={'center'}>
               <MyIcon name={'core/app/simpleMode/ai'} w={'20px'} />
-              <Box ml={2} flex={1}>
+              <FormLabel ml={2} flex={1}>
                 {appT('AI Settings')}
-              </Box>
+              </FormLabel>
             </Flex>
             <Flex alignItems={'center'} mt={5}>
               <Box {...LabelStyles}>{t('core.ai.Model')}</Box>
@@ -228,12 +250,10 @@ const EditForm = ({
             </Flex>
 
             <Box mt={3}>
-              <Box {...LabelStyles}>
-                {t('core.ai.Prompt')}
-                <MyTooltip label={t('core.app.tip.chatNodeSystemPromptTip')} forceShow>
-                  <QuestionOutlineIcon display={['none', 'inline']} ml={1} />
-                </MyTooltip>
-              </Box>
+              <HStack {...LabelStyles}>
+                <Box>{t('core.ai.Prompt')}</Box>
+                <QuestionTip label={t('core.app.tip.chatNodeSystemPromptTip')} />
+              </HStack>
               <Box mt={1}>
                 <PromptEditor
                   value={aiSystemPrompt}
@@ -255,14 +275,14 @@ const EditForm = ({
             <Flex alignItems={'center'}>
               <Flex alignItems={'center'} flex={1}>
                 <MyIcon name={'core/app/simpleMode/dataset'} w={'20px'} />
-                <Box ml={2}>{t('core.dataset.Choose Dataset')}</Box>
+                <FormLabel ml={2}>{t('core.dataset.Choose Dataset')}</FormLabel>
               </Flex>
               <Button
                 variant={'transparentBase'}
-                leftIcon={<AddIcon fontSize={'xs'} />}
+                leftIcon={<SmallAddIcon />}
                 iconSpacing={1}
                 size={'sm'}
-                fontSize={'md'}
+                fontSize={'sm'}
                 onClick={onOpenKbSelect}
               >
                 {t('common.Choose')}
@@ -272,7 +292,7 @@ const EditForm = ({
                 leftIcon={<MyIcon name={'edit'} w={'14px'} />}
                 iconSpacing={1}
                 size={'sm'}
-                fontSize={'md'}
+                fontSize={'sm'}
                 onClick={onOpenDatasetParams}
               >
                 {t('common.Params')}
@@ -285,7 +305,7 @@ const EditForm = ({
                   similarity={getValues('dataset.similarity')}
                   limit={getValues('dataset.limit')}
                   usingReRank={getValues('dataset.usingReRank')}
-                  usingQueryExtension={getValues('dataset.datasetSearchUsingExtensionQuery')}
+                  queryExtensionModel={getValues('dataset.datasetSearchExtensionModel')}
                 />
               </Box>
             )}
@@ -328,10 +348,8 @@ const EditForm = ({
             <Flex alignItems={'center'}>
               <Flex alignItems={'center'} flex={1}>
                 <MyIcon name={'core/app/toolCall'} w={'20px'} />
-                <Box ml={2}>{t('core.app.Tool call')}(实验功能)</Box>
-                <MyTooltip label={t('core.app.Tool call tip')}>
-                  <QuestionOutlineIcon ml={1} />
-                </MyTooltip>
+                <FormLabel ml={2}>{t('core.app.Tool call')}(实验功能)</FormLabel>
+                <QuestionTip ml={1} label={t('core.app.Tool call tip')} />
               </Flex>
               <Button
                 variant={'transparentBase'}
@@ -339,7 +357,7 @@ const EditForm = ({
                 iconSpacing={1}
                 mr={'-5px'}
                 size={'sm'}
-                fontSize={'md'}
+                fontSize={'sm'}
                 onClick={onOpenToolsSelect}
               >
                 {t('common.Choose')}
@@ -387,28 +405,17 @@ const EditForm = ({
             <VariableEdit
               variables={variables}
               onChange={(e) => {
-                setValue('userGuide.variables', e);
+                setValue('chatConfig.variables', e);
               }}
             />
           </Box>
 
           {/* welcome */}
           <Box {...BoxStyles}>
-            <Flex alignItems={'center'}>
-              <MyIcon name={'core/app/simpleMode/chat'} w={'20px'} />
-              <Box mx={2}>{t('core.app.Welcome Text')}</Box>
-              <MyTooltip label={t(welcomeTextTip)} forceShow>
-                <QuestionOutlineIcon />
-              </MyTooltip>
-            </Flex>
-            <MyTextarea
-              mt={2}
-              bg={'myWhite.400'}
-              rows={5}
-              placeholder={t(welcomeTextTip)}
-              defaultValue={getValues('userGuide.welcomeText')}
+            <WelcomeTextConfig
+              defaultValue={getValues('chatConfig.welcomeText')}
               onBlur={(e) => {
-                setValue('userGuide.welcomeText', e.target.value || '');
+                setValue('chatConfig.welcomeText', e.target.value || '');
               }}
             />
           </Box>
@@ -418,7 +425,7 @@ const EditForm = ({
             <TTSSelect
               value={tts}
               onChange={(e) => {
-                setValue('userGuide.tts', e);
+                setValue('chatConfig.ttsConfig', e);
               }}
             />
           </Box>
@@ -426,21 +433,41 @@ const EditForm = ({
           {/* whisper */}
           <Box {...BoxStyles}>
             <WhisperConfig
-              isOpenAudio={tts.type !== TTSTypeEnum.none}
+              isOpenAudio={tts?.type !== TTSTypeEnum.none}
               value={whisperConfig}
               onChange={(e) => {
-                setValue('userGuide.whisper', e);
+                setValue('chatConfig.whisperConfig', e);
               }}
             />
           </Box>
 
           {/* question guide */}
-          <Box {...BoxStyles} borderBottom={'none'}>
+          <Box {...BoxStyles}>
             <QGSwitch
               isChecked={postQuestionGuide}
-              size={'lg'}
               onChange={(e) => {
-                setValue('userGuide.questionGuide', e.target.checked);
+                setValue('chatConfig.questionGuide', e.target.checked);
+              }}
+            />
+          </Box>
+
+          {/* question tips */}
+          <Box {...BoxStyles}>
+            <InputGuideConfig
+              appId={appDetail._id}
+              value={inputGuideConfig}
+              onChange={(e) => {
+                setValue('chatConfig.chatInputGuide', e);
+              }}
+            />
+          </Box>
+
+          {/* timer trigger */}
+          <Box {...BoxStyles} borderBottom={'none'}>
+            <ScheduledTriggerConfig
+              value={scheduledTriggerConfig}
+              onChange={(e) => {
+                setValue('chatConfig.scheduledTriggerConfig', e);
               }}
             />
           </Box>
@@ -456,7 +483,7 @@ const EditForm = ({
             vectorModel: item.vectorModel
           }))}
           onClose={onCloseKbSelect}
-          onChange={replaceKbList}
+          onChange={replaceDatasetList}
         />
       )}
       {isOpenDatasetParams && (

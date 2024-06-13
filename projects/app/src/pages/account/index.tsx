@@ -51,7 +51,7 @@ const Account = ({ currentTab }: { currentTab: `${TabEnum}` }) => {
           }
         ]
       : []),
-    ...(feConfigs?.show_pay && userInfo?.team.canWrite
+    ...(feConfigs?.show_pay && userInfo?.team?.permission.hasWritePer
       ? [
           {
             icon: 'support/bill/payRecordLight',
@@ -70,7 +70,7 @@ const Account = ({ currentTab }: { currentTab: `${TabEnum}` }) => {
           }
         ]
       : []),
-    ...(userInfo?.team.canWrite
+    ...(userInfo?.team?.permission.hasWritePer
       ? [
           {
             icon: 'support/outlink/apikeyLight',
@@ -190,7 +190,7 @@ export async function getServerSideProps(content: any) {
   return {
     props: {
       currentTab: content?.query?.currentTab || TabEnum.info,
-      ...(await serviceSideProps(content, ['publish']))
+      ...(await serviceSideProps(content, ['publish', 'user']))
     }
   };
 }

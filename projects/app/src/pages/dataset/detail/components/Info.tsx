@@ -1,16 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { Box, Flex, Button, IconButton, Input, Textarea } from '@chakra-ui/react';
+import { Box, Flex, Button, IconButton, Input, Textarea, HStack } from '@chakra-ui/react';
 import { DeleteIcon } from '@chakra-ui/icons';
 import { delDatasetById } from '@/web/core/dataset/api';
 import { useSelectFile } from '@/web/common/file/hooks/useSelectFile';
-import { useDatasetStore } from '@/web/core/dataset/store/dataset';
 import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
 import { useForm } from 'react-hook-form';
 import { compressImgFileAndUpload } from '@/web/common/file/controller';
 import type { DatasetItemType } from '@fastgpt/global/core/dataset/type.d';
 import Avatar from '@/components/Avatar';
-import MyTooltip from '@/components/MyTooltip';
+import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
 import { useTranslation } from 'next-i18next';
 import PermissionRadio from '@/components/support/permission/Radio';
 import { useSystemStore } from '@/web/common/system/useSystemStore';
@@ -23,13 +22,16 @@ import type { VectorModelItemType } from '@fastgpt/global/core/ai/model.d';
 import { useContextSelector } from 'use-context-selector';
 import { DatasetPageContext } from '@/web/core/dataset/context/datasetPageContext';
 import MyDivider from '@fastgpt/web/components/common/MyDivider/index';
+import { DatasetTypeEnum } from '@fastgpt/global/core/dataset/constants';
+import QuestionTip from '@fastgpt/web/components/common/MyTooltip/QuestionTip';
+import FormLabel from '@fastgpt/web/components/common/MyBox/FormLabel';
 
 const Info = ({ datasetId }: { datasetId: string }) => {
   const { t } = useTranslation();
   const { datasetT } = useI18n();
-  const { datasetDetail, loadDatasetDetail, loadDatasets, updateDataset } = useDatasetStore();
-  const rebuildingCount = useContextSelector(DatasetPageContext, (v) => v.rebuildingCount);
-  const trainingCount = useContextSelector(DatasetPageContext, (v) => v.trainingCount);
+  const { datasetDetail, loadDatasetDetail, updateDataset, rebuildingCount, trainingCount } =
+    useContextSelector(DatasetPageContext, (v) => v);
+
   const refetchDatasetTraining = useContextSelector(
     DatasetPageContext,
     (v) => v.refetchDatasetTraining
@@ -82,9 +84,6 @@ const Info = ({ datasetId }: { datasetId: string }) => {
         ...data
       });
     },
-    onSuccess() {
-      loadDatasets();
-    },
     successToast: t('common.Update Success'),
     errorToast: t('common.Update Failed')
   });
@@ -117,7 +116,7 @@ const Info = ({ datasetId }: { datasetId: string }) => {
     },
     onSuccess() {
       refetchDatasetTraining();
-      loadDatasetDetail(datasetId, true);
+      loadDatasetDetail(datasetId);
     },
     successToast: datasetT('Rebuild embedding start tip'),
     errorToast: t('common.Update Failed')
@@ -128,16 +127,16 @@ const Info = ({ datasetId }: { datasetId: string }) => {
   return (
     <Box py={5} px={[5, 10]}>
       <Flex mt={5} w={'100%'} alignItems={'center'}>
-        <Box flex={['0 0 90px', '0 0 160px']} w={0}>
+        <FormLabel flex={['0 0 90px', '0 0 160px']} w={0}>
           {t('core.dataset.Dataset ID')}
-        </Box>
+        </FormLabel>
         <Box flex={1}>{datasetDetail._id}</Box>
       </Flex>
       <Flex mt={8} w={'100%'} alignItems={'center'} flexWrap={'wrap'}>
-        <Box flex={['0 0 90px', '0 0 160px']} w={0}>
+        <FormLabel flex={['0 0 90px', '0 0 160px']} w={0}>
           {t('core.ai.model.Vector Model')}
-        </Box>
-        <Box flex={[1, '0 0 300px']}>
+        </FormLabel>
+        <Box flex={[1, '0 0 320px']}>
           <AIModelSelector
             w={'100%'}
             value={vectorModel.model}
@@ -162,16 +161,16 @@ const Info = ({ datasetId }: { datasetId: string }) => {
         </Box>
       </Flex>
       <Flex mt={8} w={'100%'} alignItems={'center'}>
-        <Box flex={['0 0 90px', '0 0 160px']} w={0}>
+        <FormLabel flex={['0 0 90px', '0 0 160px']} w={0}>
           {t('core.Max Token')}
-        </Box>
-        <Box flex={[1, '0 0 300px']}>{vectorModel.maxToken}</Box>
+        </FormLabel>
+        <Box flex={[1, '0 0 320px']}>{vectorModel.maxToken}</Box>
       </Flex>
       <Flex mt={6} alignItems={'center'} flexWrap={'wrap'}>
-        <Box flex={['0 0 90px', '0 0 160px']} w={0}>
+        <FormLabel flex={['0 0 90px', '0 0 160px']} w={0}>
           {t('core.ai.model.Dataset Agent Model')}
-        </Box>
-        <Box flex={[1, '0 0 300px']}>
+        </FormLabel>
+        <Box flex={[1, '0 0 320px']}>
           <AIModelSelector
             w={'100%'}
             value={agentModel.model}
@@ -188,13 +187,30 @@ const Info = ({ datasetId }: { datasetId: string }) => {
         </Box>
       </Flex>
 
-      <MyDivider my={4} h={'2px'} maxW={'500px'} />
+      <MyDivider my={6} h={'2px'} maxW={'500px'} />
+
+      {datasetDetail.type === DatasetTypeEnum.externalFile && (
+        <>
+          <Flex w={'100%'} alignItems={'center'}>
+            <HStack fontSize={['sm', 'md']} flex={['0 0 90px', '0 0 160px']} w={0}>
+              <Box>{datasetT('External read url')}</Box>
+              <QuestionTip label={datasetT('External read url tip')} />
+            </HStack>
+            <Input
+              flex={[1, '0 0 320px']}
+              placeholder="https://test.com/read?fileId={{fileId}}"
+              {...register('externalReadUrl')}
+            />
+          </Flex>
+          <MyDivider my={6} h={'2px'} maxW={'500px'} />
+        </>
+      )}
 
       <Flex mt={5} w={'100%'} alignItems={'center'}>
-        <Box flex={['0 0 90px', '0 0 160px']} w={0}>
+        <FormLabel flex={['0 0 90px', '0 0 160px']} w={0}>
           {t('core.dataset.Avatar')}
-        </Box>
-        <Box flex={[1, '0 0 300px']}>
+        </FormLabel>
+        <Box flex={[1, '0 0 320px']}>
           <MyTooltip label={t('common.avatar.Select Avatar')}>
             <Avatar
               m={'auto'}
@@ -208,20 +224,20 @@ const Info = ({ datasetId }: { datasetId: string }) => {
         </Box>
       </Flex>
       <Flex mt={8} w={'100%'} alignItems={'center'}>
-        <Box flex={['0 0 90px', '0 0 160px']} w={0}>
+        <FormLabel flex={['0 0 90px', '0 0 160px']} w={0}>
           {t('core.dataset.Name')}
-        </Box>
-        <Input flex={[1, '0 0 300px']} maxLength={30} {...register('name')} />
+        </FormLabel>
+        <Input flex={[1, '0 0 320px']} maxLength={30} {...register('name')} />
       </Flex>
       <Flex mt={8} alignItems={'center'} w={'100%'}>
-        <Box flex={['0 0 90px', '0 0 160px']}>{t('common.Intro')}</Box>
-        <Textarea flex={[1, '0 0 300px']} {...register('intro')} placeholder={t('common.Intro')} />
+        <FormLabel flex={['0 0 90px', '0 0 160px']}>{t('common.Intro')}</FormLabel>
+        <Textarea flex={[1, '0 0 320px']} {...register('intro')} placeholder={t('common.Intro')} />
       </Flex>
       {datasetDetail.isOwner && (
         <Flex mt={5} alignItems={'center'} w={'100%'} flexWrap={'wrap'}>
-          <Box flex={['0 0 90px', '0 0 160px']} w={0}>
+          <FormLabel flex={['0 0 90px', '0 0 160px']} w={0}>
             {t('user.Permission')}
-          </Box>
+          </FormLabel>
           <Box>
             <PermissionRadio
               value={permission}

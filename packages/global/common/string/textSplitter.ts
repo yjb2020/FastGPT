@@ -9,6 +9,9 @@ type SplitProps = {
   overlapRatio?: number;
   customReg?: string[];
 };
+export type TextSplitProps = Omit<SplitProps, 'text' | 'chunkLen'> & {
+  chunkLen?: number;
+};
 
 type SplitResponse = {
   chunks: string[];
@@ -49,6 +52,7 @@ const strIsMdTable = (str: string) => {
       return false;
     }
   }
+
   return true;
 };
 const markdownTableSplit = (props: SplitProps): SplitResponse => {
@@ -77,6 +81,10 @@ ${mdSplitString}
     chunk += `${splitText2Lines[i]}\n`;
   }
 
+  if (chunk) {
+    chunks.push(chunk);
+  }
+
   return {
     chunks,
     chars: chunks.reduce((sum, chunk) => sum + chunk.length, 0)
@@ -94,6 +102,8 @@ const commonSplit = (props: SplitProps): SplitResponse => {
   text = text.replace(/(```[\s\S]*?```|~~~[\s\S]*?~~~)/g, function (match) {
     return match.replace(/\n/g, codeBlockMarker);
   });
+  // replace invalid \n
+  text = text.replace(/(\r?\n|\r){3,}/g, '\n\n\n');
 
   // The larger maxLen is, the next sentence is less likely to trigger splitting
   const stepReges: { reg: RegExp; maxLen: number }[] = [
@@ -330,7 +340,7 @@ const commonSplit = (props: SplitProps): SplitResponse => {
  */
 export const splitText2Chunks = (props: SplitProps): SplitResponse => {
   let { text = '' } = props;
-
+  const start = Date.now();
   const splitWithCustomSign = text.split(CUSTOM_SPLIT_SIGN);
 
   const splitResult = splitWithCustomSign.map((item) => {
@@ -340,7 +350,7 @@ export const splitText2Chunks = (props: SplitProps): SplitResponse => {
 
     return commonSplit(props);
   });
-
+  console.log(Date.now() - start);
   return {
     chunks: splitResult.map((item) => item.chunks).flat(),
     chars: splitResult.reduce((sum, item) => sum + item.chars, 0)

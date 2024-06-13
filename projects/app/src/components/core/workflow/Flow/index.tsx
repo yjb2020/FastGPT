@@ -11,7 +11,8 @@ import ReactFlow, {
   NodeChange,
   OnConnectStartParams,
   addEdge,
-  EdgeChange
+  EdgeChange,
+  Edge
 } from 'reactflow';
 import { Box, Flex, IconButton, useDisclosure } from '@chakra-ui/react';
 import { SmallCloseIcon } from '@chakra-ui/icons';
@@ -27,7 +28,7 @@ import { useToast } from '@fastgpt/web/hooks/useToast';
 import { useTranslation } from 'next-i18next';
 import { FlowNodeItemType } from '@fastgpt/global/core/workflow/type/index.d';
 import MyIcon from '@fastgpt/web/components/common/Icon';
-import MyTooltip from '@/components/MyTooltip';
+import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
 import { connectionLineStyle, defaultEdgeOptions } from '../constants';
 import { useConfirm } from '@fastgpt/web/hooks/useConfirm';
 import { useKeyboard } from './hooks/useKeyboard';
@@ -35,7 +36,7 @@ import { useContextSelector } from 'use-context-selector';
 import { WorkflowContext } from '../context';
 
 const NodeSimple = dynamic(() => import('./nodes/NodeSimple'));
-const nodeTypes: Record<`${FlowNodeTypeEnum}`, any> = {
+const nodeTypes: Record<FlowNodeTypeEnum, any> = {
   [FlowNodeTypeEnum.emptyNode]: NodeSimple,
   [FlowNodeTypeEnum.globalVariable]: NodeSimple,
   [FlowNodeTypeEnum.systemConfig]: dynamic(() => import('./nodes/NodeSystemConfig')),
@@ -58,7 +59,8 @@ const nodeTypes: Record<`${FlowNodeTypeEnum}`, any> = {
   ),
   [FlowNodeTypeEnum.lafModule]: dynamic(() => import('./nodes/NodeLaf')),
   [FlowNodeTypeEnum.ifElseNode]: dynamic(() => import('./nodes/NodeIfElse')),
-  [FlowNodeTypeEnum.variableUpdate]: dynamic(() => import('./nodes/NodeVariableUpdate'))
+  [FlowNodeTypeEnum.variableUpdate]: dynamic(() => import('./nodes/NodeVariableUpdate')),
+  [FlowNodeTypeEnum.code]: dynamic(() => import('./nodes/NodeCode'))
 };
 const edgeTypes = {
   [EDGE_TYPE]: ButtonEdge
@@ -73,13 +75,16 @@ const Container = React.memo(function Container() {
   });
 
   const { isDowningCtrl } = useKeyboard();
-  const setConnectingEdge = useContextSelector(WorkflowContext, (v) => v.setConnectingEdge);
-  const reactFlowWrapper = useContextSelector(WorkflowContext, (v) => v.reactFlowWrapper);
-  const nodes = useContextSelector(WorkflowContext, (v) => v.nodes);
-  const onNodesChange = useContextSelector(WorkflowContext, (v) => v.onNodesChange);
-  const edges = useContextSelector(WorkflowContext, (v) => v.edges);
-  const setEdges = useContextSelector(WorkflowContext, (v) => v.setEdges);
-  const onEdgesChange = useContextSelector(WorkflowContext, (v) => v.onEdgesChange);
+  const {
+    setConnectingEdge,
+    reactFlowWrapper,
+    nodes,
+    onNodesChange,
+    edges,
+    setEdges,
+    onEdgesChange,
+    setHoverEdgeId
+  } = useContextSelector(WorkflowContext, (v) => v);
 
   /* node */
   const handleNodesChange = useCallback(
@@ -158,6 +163,17 @@ const Container = React.memo(function Container() {
     [onConnect, t, toast]
   );
 
+  /* edge */
+  const onEdgeMouseEnter = useCallback(
+    (e: any, edge: Edge) => {
+      setHoverEdgeId(edge.id);
+    },
+    [setHoverEdgeId]
+  );
+  const onEdgeMouseLeave = useCallback(() => {
+    setHoverEdgeId(undefined);
+  }, [setHoverEdgeId]);
+
   return (
     <>
       <ReactFlow
@@ -177,6 +193,8 @@ const Container = React.memo(function Container() {
         onConnect={customOnConnect}
         onConnectStart={onConnectStart}
         onConnectEnd={onConnectEnd}
+        onEdgeMouseEnter={onEdgeMouseEnter}
+        onEdgeMouseLeave={onEdgeMouseLeave}
       >
         <FlowController />
       </ReactFlow>

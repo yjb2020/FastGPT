@@ -7,9 +7,10 @@ import { useContextSelector } from 'use-context-selector';
 import { WorkflowContext } from '../../context';
 
 const ButtonEdge = (props: EdgeProps) => {
-  const nodes = useContextSelector(WorkflowContext, (v) => v.nodes);
-  const setEdges = useContextSelector(WorkflowContext, (v) => v.setEdges);
-  const workflowDebugData = useContextSelector(WorkflowContext, (v) => v.workflowDebugData);
+  const { nodes, setEdges, workflowDebugData, hoverEdgeId } = useContextSelector(
+    WorkflowContext,
+    (v) => v
+  );
 
   const {
     id,
@@ -20,9 +21,10 @@ const ButtonEdge = (props: EdgeProps) => {
     sourcePosition,
     targetPosition,
     selected,
-    sourceHandleId,
     source,
+    sourceHandleId,
     target,
+    targetHandleId,
     style
   } = props;
 
@@ -50,6 +52,7 @@ const ButtonEdge = (props: EdgeProps) => {
   });
 
   const isToolEdge = sourceHandleId === NodeOutputKeyEnum.selectedTools;
+  const isHover = hoverEdgeId === id;
 
   const { newTargetX, newTargetY } = useMemo(() => {
     if (targetPosition === 'left') {
@@ -84,12 +87,13 @@ const ButtonEdge = (props: EdgeProps) => {
 
   const edgeColor = useMemo(() => {
     const targetEdge = workflowDebugData?.runtimeEdges.find(
-      (edge) => edge.source === source && edge.target === target
+      (edge) => edge.sourceHandle === sourceHandleId && edge.targetHandle === targetHandleId
     );
     if (!targetEdge) {
       if (highlightEdge) return '#3370ff';
       return '#94B5FF';
     }
+    console.log(targetEdge);
     // debug mode
     const colorMap = {
       [RuntimeEdgeStatusEnum.active]: '#39CC83',
@@ -97,7 +101,7 @@ const ButtonEdge = (props: EdgeProps) => {
       [RuntimeEdgeStatusEnum.skipped]: '#8A95A7'
     };
     return colorMap[targetEdge.status];
-  }, [highlightEdge, source, target, workflowDebugData?.runtimeEdges]);
+  }, [highlightEdge, sourceHandleId, targetHandleId, workflowDebugData?.runtimeEdges]);
 
   const memoEdgeLabel = useMemo(() => {
     const arrowTransform = (() => {
@@ -116,24 +120,23 @@ const ButtonEdge = (props: EdgeProps) => {
     })();
     return (
       <EdgeLabelRenderer>
-        {highlightEdge && (
-          <Flex
-            alignItems={'center'}
-            justifyContent={'center'}
-            position={'absolute'}
-            transform={`translate(-55%, -50%) translate(${labelX}px,${labelY}px)`}
-            pointerEvents={'all'}
-            w={'17px'}
-            h={'17px'}
-            bg={'white'}
-            borderRadius={'17px'}
-            cursor={'pointer'}
-            zIndex={1000}
-            onClick={() => onDelConnect(id)}
-          >
-            <MyIcon name={'core/workflow/closeEdge'} w={'100%'}></MyIcon>
-          </Flex>
-        )}
+        <Flex
+          display={isHover || highlightEdge ? 'flex' : 'none'}
+          alignItems={'center'}
+          justifyContent={'center'}
+          position={'absolute'}
+          transform={`translate(-55%, -50%) translate(${labelX}px,${labelY}px)`}
+          pointerEvents={'all'}
+          w={'17px'}
+          h={'17px'}
+          bg={'white'}
+          borderRadius={'17px'}
+          cursor={'pointer'}
+          zIndex={1000}
+          onClick={() => onDelConnect(id)}
+        >
+          <MyIcon name={'core/workflow/closeEdge'} w={'100%'}></MyIcon>
+        </Flex>
         {!isToolEdge && (
           <Flex
             alignItems={'center'}
@@ -161,6 +164,7 @@ const ButtonEdge = (props: EdgeProps) => {
       </EdgeLabelRenderer>
     );
   }, [
+    isHover,
     highlightEdge,
     labelX,
     labelY,

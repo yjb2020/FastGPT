@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import NodeCard from '../render/NodeCard';
 import { useTranslation } from 'next-i18next';
 import { Box, Button, Flex } from '@chakra-ui/react';
@@ -9,7 +9,7 @@ import { IfElseListItemType } from '@fastgpt/global/core/workflow/template/syste
 import { useContextSelector } from 'use-context-selector';
 import { WorkflowContext } from '../../../context';
 import Container from '../../components/Container';
-import DndDrag, { Draggable, DropResult } from '@fastgpt/web/components/common/DndDrag/index';
+import DndDrag, { Draggable } from '@fastgpt/web/components/common/DndDrag/index';
 import { SourceHandle } from '../render/Handle';
 import { getHandleId } from '@fastgpt/global/core/workflow/utils';
 import ListItem from './ListItem';
@@ -19,6 +19,7 @@ const NodeIfElse = ({ data, selected }: NodeProps<FlowNodeItemType>) => {
   const { t } = useTranslation();
   const { nodeId, inputs = [] } = data;
   const onChangeNode = useContextSelector(WorkflowContext, (v) => v.onChangeNode);
+  const elseHandleId = getHandleId(nodeId, 'source', IfElseResultEnum.ELSE);
 
   const ifElseList = useMemo(
     () =>
@@ -49,7 +50,7 @@ const NodeIfElse = ({ data, selected }: NodeProps<FlowNodeItemType>) => {
     <NodeCard selected={selected} maxW={'1000px'} {...data}>
       <Box px={4} cursor={'default'}>
         <DndDrag<IfElseListItemType>
-          onDragEndCb={(list) => onUpdateIfElseList(list)}
+          onDragEndCb={(list: IfElseListItemType[]) => onUpdateIfElseList(list)}
           dataList={ifElseList}
           renderClone={(provided, snapshot, rubric) => (
             <ListItem
@@ -90,12 +91,12 @@ const NodeIfElse = ({ data, selected }: NodeProps<FlowNodeItemType>) => {
 
         <Container position={'relative'}>
           <Flex alignItems={'center'}>
-            <Box color={'black'} fontSize={'lg'} ml={2}>
+            <Box color={'black'} fontSize={'md'} ml={2}>
               {IfElseResultEnum.ELSE}
             </Box>
             <SourceHandle
               nodeId={nodeId}
-              handleId={getHandleId(nodeId, 'source', IfElseResultEnum.ELSE)}
+              handleId={elseHandleId}
               position={Position.Right}
               translate={[26, 0]}
             />

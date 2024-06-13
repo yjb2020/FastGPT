@@ -70,7 +70,9 @@ export const FlowValueTypeMap = {
   [WorkflowIOValueTypeEnum.selectDataset]: {
     label: '选择知识库',
     value: WorkflowIOValueTypeEnum.selectDataset,
-    description: ''
+    description: `{
+  datasetId: string;
+}`
   },
   [WorkflowIOValueTypeEnum.any]: {
     label: 'any',
@@ -83,3 +85,18 @@ export const FlowValueTypeMap = {
     description: ''
   }
 };
+
+export const fnValueTypeSelect = [
+  {
+    label: 'String',
+    value: 'string'
+  },
+  {
+    label: 'Number',
+    value: 'number'
+  },
+  {
+    label: 'Boolean',
+    value: 'boolean'
+  }
+];

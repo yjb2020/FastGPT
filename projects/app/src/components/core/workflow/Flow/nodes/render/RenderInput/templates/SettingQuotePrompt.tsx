@@ -5,29 +5,25 @@ import MyModal from '@fastgpt/web/components/common/MyModal';
 import { useForm } from 'react-hook-form';
 import { PromptTemplateItem } from '@fastgpt/global/core/ai/type';
 import { useTranslation } from 'next-i18next';
-import {
-  formatEditorVariablePickerIcon,
-  getGuideModule,
-  splitGuideModule
-} from '@fastgpt/global/core/workflow/utils';
 import { ModalBody } from '@chakra-ui/react';
-import MyTooltip from '@/components/MyTooltip';
+import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
 import {
   Prompt_QuotePromptList,
   Prompt_QuoteTemplateList
 } from '@fastgpt/global/core/ai/prompt/AIChat';
-import { QuestionOutlineIcon } from '@chakra-ui/icons';
 import PromptEditor from '@fastgpt/web/components/common/Textarea/PromptEditor';
 import PromptTemplate from '@/components/PromptTemplate';
 import { NodeInputKeyEnum, WorkflowIOValueTypeEnum } from '@fastgpt/global/core/workflow/constants';
 import MyIcon from '@fastgpt/web/components/common/Icon';
 import Reference from './Reference';
-import { getSystemVariables } from '@/web/core/app/utils';
 import ValueTypeLabel from '../../ValueTypeLabel';
 import { useContextSelector } from 'use-context-selector';
 import { WorkflowContext } from '@/components/core/workflow/context';
 import { getWorkflowGlobalVariables } from '@/web/core/workflow/utils';
 import { useCreation } from 'ahooks';
+import { AppContext } from '@/web/core/app/context/appContext';
+import QuestionTip from '@fastgpt/web/components/common/MyTooltip/QuestionTip';
+import FormLabel from '@fastgpt/web/components/common/MyBox/FormLabel';
 
 const LabelStyles: BoxProps = {
   fontSize: ['sm', 'md']
@@ -52,9 +48,14 @@ const SettingQuotePrompt = (props: RenderInputProps) => {
   });
   const aiChatQuoteTemplate = watch('quoteTemplate');
   const aiChatQuotePrompt = watch('quotePrompt');
+  const { appDetail } = useContextSelector(AppContext, (v) => v);
 
   const variables = useCreation(() => {
-    const globalVariables = getWorkflowGlobalVariables(nodeList, t);
+    const globalVariables = getWorkflowGlobalVariables({
+      nodes: nodeList,
+      chatConfig: appDetail.chatConfig,
+      t
+    });
 
     return globalVariables;
   }, [nodeList, t]);
@@ -178,18 +179,17 @@ const SettingQuotePrompt = (props: RenderInputProps) => {
           <ModalBody>
             <Box>
               <Flex {...LabelStyles} mb={1}>
-                {t('core.app.Quote templates')}
-                <MyTooltip
+                <FormLabel>{t('core.app.Quote templates')}</FormLabel>
+                <QuestionTip
+                  ml={1}
                   label={t('template.Quote Content Tip', {
                     default: Prompt_QuoteTemplateList[0].value
                   })}
-                  forceShow
-                >
-                  <QuestionOutlineIcon display={['none', 'inline']} ml={1} />
-                </MyTooltip>
+                ></QuestionTip>
                 <Box flex={1} />
                 <Box
                   {...selectTemplateBtn}
+                  fontSize={'sm'}
                   onClick={() =>
                     setSelectTemplateData({
                       title: t('core.app.Select quote template'),
@@ -216,15 +216,13 @@ const SettingQuotePrompt = (props: RenderInputProps) => {
             </Box>
             <Box mt={4}>
               <Flex {...LabelStyles} mb={1}>
-                {t('core.app.Quote prompt')}
-                <MyTooltip
+                <FormLabel>{t('core.app.Quote prompt')}</FormLabel>
+                <QuestionTip
+                  ml={1}
                   label={t('template.Quote Prompt Tip', {
                     default: Prompt_QuotePromptList[0].value
                   })}
-                  forceShow
-                >
-                  <QuestionOutlineIcon display={['none', 'inline']} ml={1} />
-                </MyTooltip>
+                ></QuestionTip>
               </Flex>
               <PromptEditor
                 variables={quotePromptVariables}

@@ -14,6 +14,7 @@ import dynamic from 'next/dynamic';
 import { useContextSelector } from 'use-context-selector';
 import { WorkflowContext } from '@/components/core/workflow/context';
 import { FlowNodeTypeEnum } from '@fastgpt/global/core/workflow/node/constant';
+import { AppContext } from '@/web/core/app/context/appContext';
 
 const MultipleRowSelect = dynamic(
   () => import('@fastgpt/web/components/common/MySelect/MultipleRowSelect')
@@ -41,7 +42,7 @@ const Reference = ({ item, nodeId }: RenderInputProps) => {
   const nodeList = useContextSelector(WorkflowContext, (v) => v.nodeList);
 
   const onSelect = useCallback(
-    (e: any) => {
+    (e: ReferenceValueProps) => {
       const workflowStartNode = nodeList.find(
         (node) => node.flowNodeType === FlowNodeTypeEnum.workflowStart
       );
@@ -98,6 +99,7 @@ export const useReference = ({
   value?: any;
 }) => {
   const { t } = useTranslation();
+  const { appDetail } = useContextSelector(AppContext, (v) => v);
   const nodeList = useContextSelector(WorkflowContext, (v) => v.nodeList);
   const edges = useContextSelector(WorkflowContext, (v) => v.edges);
 
@@ -106,6 +108,7 @@ export const useReference = ({
       nodeId,
       nodes: nodeList,
       edges: edges,
+      chatConfig: appDetail.chatConfig,
       t
     });
 
@@ -141,7 +144,7 @@ export const useReference = ({
       .filter((item) => item.children.length > 0);
 
     return list;
-  }, [edges, nodeId, nodeList, t, valueType]);
+  }, [appDetail.chatConfig, edges, nodeId, nodeList, t, valueType]);
 
   const formatValue = useMemo(() => {
     if (

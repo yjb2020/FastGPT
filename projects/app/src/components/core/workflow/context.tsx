@@ -13,7 +13,7 @@ import { RuntimeEdgeItemType, StoreEdgeItemType } from '@fastgpt/global/core/wor
 import { FlowNodeChangeProps } from '@fastgpt/global/core/workflow/type/fe';
 import { FlowNodeInputItemType } from '@fastgpt/global/core/workflow/type/io';
 import { useToast } from '@fastgpt/web/hooks/useToast';
-import { useCreation, useMemoizedFn } from 'ahooks';
+import { useMemoizedFn } from 'ahooks';
 import React, {
   Dispatch,
   SetStateAction,
@@ -32,11 +32,13 @@ import {
   useEdgesState,
   useNodesState
 } from 'reactflow';
-import { createContext } from 'use-context-selector';
+import { createContext, useContextSelector } from 'use-context-selector';
 import { defaultRunningStatus } from './constants';
 import { checkNodeRunStatus } from '@fastgpt/global/core/workflow/runtime/utils';
 import { EventNameEnum, eventBus } from '@/web/common/utils/eventbus';
 import { getHandleId } from '@fastgpt/global/core/workflow/utils';
+import { AppChatConfigType } from '@fastgpt/global/core/app/type';
+import { AppContext } from '@/web/core/app/context/appContext';
 
 type OnChange<ChangesType> = (changes: ChangesType[]) => void;
 
@@ -68,6 +70,8 @@ type WorkflowContextType = {
     sourceHandle?: string | undefined;
     targetHandle?: string | undefined;
   }) => void;
+  hoverEdgeId?: string;
+  setHoverEdgeId: React.Dispatch<React.SetStateAction<string | undefined>>;
 
   // connect
   connectingEdge?: OnConnectStartParams;
@@ -83,7 +87,11 @@ type WorkflowContextType = {
     toolInputs: FlowNodeInputItemType[];
     commonInputs: FlowNodeInputItemType[];
   };
-  initData: (e: { nodes: StoreNodeItemType[]; edges: StoreEdgeItemType[] }) => Promise<void>;
+  initData: (e: {
+    nodes: StoreNodeItemType[];
+    edges: StoreEdgeItemType[];
+    chatConfig?: AppChatConfigType;
+  }) => Promise<void>;
 
   // debug
   workflowDebugData:
@@ -210,6 +218,9 @@ export const WorkflowContext = createContext<WorkflowContextType>({
   isShowVersionHistories: false,
   setIsShowVersionHistories: function (value: React.SetStateAction<boolean>): void {
     throw new Error('Function not implemented.');
+  },
+  setHoverEdgeId: function (value: React.SetStateAction<string | undefined>): void {
+    throw new Error('Function not implemented.');
   }
 });
 
@@ -223,9 +234,11 @@ const WorkflowContextProvider = ({
   const { appId, pluginId } = value;
   const { toast } = useToast();
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
+  const setAppDetail = useContextSelector(AppContext, (v) => v.setAppDetail);
 
   /* edge */
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+  const [hoverEdgeId, setHoverEdgeId] = useState<string>();
   const onDelEdge = useCallback(
     ({
       nodeId,
@@ -322,7 +335,6 @@ const WorkflowContextProvider = ({
             item.key === props.key ? props.value : item
           );
         } else if (type === 'replaceInput') {
-          onDelEdge({ nodeId, targetHandle: getHandleId(nodeId, 'target', props.key) });
           const oldInputIndex = node.data.inputs.findIndex((item) => item.key === props.key);
           updateObj.inputs = node.data.inputs.filter((item) => item.key !== props.key);
           setTimeout(() => {
@@ -351,7 +363,6 @@ const WorkflowContextProvider = ({
             }
           }
         } else if (type === 'delInput') {
-          onDelEdge({ nodeId, targetHandle: getHandleId(nodeId, 'target', props.key) });
           updateObj.inputs = node.data.inputs.filter((item) => item.key !== props.key);
         } else if (type === 'updateOutput') {
           updateObj.outputs = node.data.outputs.map((item) =>
@@ -428,12 +439,18 @@ const WorkflowContextProvider = ({
     };
   };
 
-  const initData = useMemoizedFn(
-    async (e: { nodes: StoreNodeItemType[]; edges: StoreEdgeItemType[] }) => {
-      setNodes(e.nodes?.map((item) => storeNode2FlowNode({ item })));
-      setEdges(e.edges?.map((item) => storeEdgesRenderEdge({ edge: item })));
+  const initData = useMemoizedFn(async (e: Parameters<WorkflowContextType['initData']>[0]) => {
+    setNodes(e.nodes?.map((item) => storeNode2FlowNode({ item })) || []);
+    setEdges(e.edges?.map((item) => storeEdgesRenderEdge({ edge: item })) || []);
+
+    const chatConfig = e.chatConfig;
+    if (chatConfig) {
+      setAppDetail((state) => ({
+        ...state,
+        chatConfig
+      }));
     }
-  );
+  });
 
   /* debug */
   const [workflowDebugData, setWorkflowDebugData] = useState<DebugDataType>();
@@ -662,6 +679,8 @@ const WorkflowContextProvider = ({
         // edge
         edges,
         setEdges,
+        hoverEdgeId,
+        setHoverEdgeId,
         onEdgesChange,
         connectingEdge,
         setConnectingEdge,

@@ -1,11 +1,16 @@
 {
+  "Add new": "Add new",
   "App": "App",
+  "Code editor": "Code edit",
   "Export": "Export",
+  "Field name": "Name",
   "Folder": "Folder",
+  "Is open": "Opened",
   "Login": "Login",
   "Move": "Move",
   "Name": "Name",
   "New Create": "Create New",
+  "No data": "No data",
   "Rename": "Rename",
   "Running": "Running",
   "UnKnow": "Unknown",
@@ -14,6 +19,7 @@
     "Action": "Action",
     "Add": "Add",
     "Add New": "Add New",
+    "Add Success": "Add successfully",
     "All": "All",
     "Back": "Back",
     "Beta": "Beta",
@@ -43,7 +49,9 @@
     "Delete Success": "Delete Success",
     "Delete Tip": "Delete Tip",
     "Delete Warning": "Delete Warning",
+    "Delete folder": "Delete",
     "Detail": "Detail",
+    "Documents": "Documents",
     "Done": "Done",
     "Edit": "Edit",
     "Exit": "Exit",
@@ -57,6 +65,8 @@
     "Import failed": "Import failed",
     "Import success": "Import success",
     "Input": "Input",
+    "Input folder description": "Folder description",
+    "Input name": "Folder name",
     "Intro": "Intro",
     "Invalid Json": "Invalid JSON format, please check.",
     "Last Step": "Last Step",
@@ -64,6 +74,7 @@
     "Load Failed": "Load Failed",
     "Loading": "Loading...",
     "More settings": "More settings",
+    "Move": "Move",
     "MultipleRowSelect": {
       "No data": "No data available"
     },
@@ -77,6 +88,7 @@
     "OK": "OK",
     "Open": "Open",
     "Opened": "Opened",
+    "Operation": "Operation",
     "Other": "Other",
     "Output": "Output",
     "Params": "Params",
@@ -92,6 +104,7 @@
     "Rename Success": "Rename Success",
     "Request Error": "Request Error",
     "Require Input": "Required Input",
+    "Role": "Role",
     "Root folder": "Root folder",
     "Save": "Save",
     "Save Failed": "Save Failed",
@@ -99,6 +112,7 @@
     "Search": "Search",
     "Select File Failed": "Select File Failed",
     "Select One Folder": "Select a folder",
+    "Select all": "Select all",
     "Select template": "Select template",
     "Set Avatar": "Click to set avatar",
     "Set Name": "Set a name",
@@ -152,7 +166,9 @@
     "folder": {
       "Drag Tip": "Drag me",
       "Move Success": "Move successful",
+      "Move to": "Move to",
       "No Folder": "No subdirectories, place here",
+      "Open folder": "Open folder",
       "Root Path": "Root directory",
       "empty": "This directory has nothing selectable~"
     },
@@ -509,18 +525,14 @@
       "Choose Dataset": "Associate dataset",
       "Chunk amount": "Number of chunks",
       "Collection": "Dataset",
-      "Common Dataset": "Common dataset",
-      "Common Dataset Desc": "Can be built by importing files, web links, or manual entry",
       "Create dataset": "Create a dataset",
       "Dataset": "Dataset",
       "Dataset ID": "Dataset ID",
       "Dataset Type": "Dataset type",
       "Delete Confirm": "Confirm to delete this dataset? Data cannot be recovered after deletion, please confirm!",
       "Delete Website Tips": "Confirm to delete this site?",
-      "Empty Dataset": "",
       "Empty Dataset Tips": "No datasets yet, go create one!",
       "File collection": "File dataset",
-      "Folder Dataset": "Folder",
       "Folder placeholder": "This is a directory",
       "Go Dataset": "Go to dataset",
       "Intro Placeholder": "This dataset has no introduction~",
@@ -540,8 +552,6 @@
       "Table collection": "Table dataset",
       "Text collection": "Text dataset",
       "Total chunks": "Total chunks: {{total}}",
-      "Website Dataset": "Web site synchronization",
-      "Website Dataset Desc": "Web site synchronization allows you to use a web page link to build a dataset",
       "collection": {
         "Click top config website": "Click to configure website",
         "Collection name": "Dataset name",
@@ -1178,6 +1188,7 @@
     }
   },
   "error": {
+    "Create failed": "Create failed",
     "fileNotFound": "File not found~",
     "team": {
       "overSize": "Team members exceed the limit"
@@ -1208,6 +1219,13 @@
     "Tools": "Tools"
   },
   "permission": {
+    "Collaborator": "",
+    "Default permission": "Default permission",
+    "Manage": "Manage",
+    "Not collaborator": "Not collaborator",
+    "Owner": "Owner",
+    "Permission": "Permission",
+    "Permission config": "Permission config",
     "Private": "Private",
     "Private Tip": "Only available to oneself",
     "Public": "Team",
@@ -1285,6 +1303,9 @@
         "Response Quote": "Return quote",
         "Response Quote tips": "Return quote content in the share link, but will not allow users to download the original document"
       }
+    },
+    "permission": {
+      "Permission": "Permission"
     },
     "standard": {
       "AI Bonus Points": "AI points",
@@ -1551,9 +1572,6 @@
       "Invite Member Success Tip": "Invitation completed\nSuccess: {{success}}\nInvalid usernames: {{inValid}}\nAlready in team: {{inTeam}}",
       "Invite Member Tips": "The invitee can access or use other resources within the team",
       "Invite Role Admin Alias": "Invite Admin",
-      "Invite Role Admin Tip": "Admin\nCan create, edit, and use team resources",
-      "Invite Role Visitor Alias": "Invite Visitor",
-      "Invite Role Visitor Tip": "Visitor\nCan only use resources, no creation or editing rights",
       "Leave Team": "Leave Team",
       "Leave Team Failed": "Failed to leave team",
       "Manage": "Team Management",
@@ -1568,7 +1586,7 @@
       "Remove Member Failed": "Failed to remove team member",
       "Remove Member Success": "Successfully removed team member",
       "Remove Member Tip": "Remove from Team",
-      "Role": "Role",
+      "Role": "Role(Old)",
       "Select Team": "Select Team",
       "Set Name": "Name Your Team",
       "Switch Team Failed": "Failed to switch team",

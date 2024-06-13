@@ -18,6 +18,7 @@ import { countPromptTokens } from '../../../common/string/tiktoken/index';
 import { datasetSearchResultConcat } from '@fastgpt/global/core/dataset/search/utils';
 import { hashStr } from '@fastgpt/global/common/string/tools';
 import { jiebaSplit } from '../../../common/string/jieba';
+import { getCollectionSourceData } from '@fastgpt/global/core/dataset/collection/utils';
 
 type SearchDatasetDataProps = {
   teamId: string;
@@ -84,7 +85,7 @@ export async function searchDatasetData(props: SearchDatasetDataProps) {
     const { results } = await recallFromVectorStore({
       teamId,
       datasetIds,
-      vectors,
+      vector: vectors[0],
       limit
     });
 
@@ -93,12 +94,12 @@ export async function searchDatasetData(props: SearchDatasetDataProps) {
       {
         teamId,
         datasetId: { $in: datasetIds },
-        collectionId: { $in: results.map((item) => item.collectionId) },
+        collectionId: { $in: Array.from(new Set(results.map((item) => item.collectionId))) },
         'indexes.dataId': { $in: results.map((item) => item.id?.trim()) }
       },
       'datasetId collectionId q a chunkIndex indexes'
     )
-      .populate('collectionId', 'name fileId rawLink')
+      .populate('collectionId', 'name fileId rawLink externalFileId externalFileUrl')
       .lean()) as DatasetDataWithCollectionType[];
 
     // add score to data(It's already sorted. The first one is the one with the most points)
@@ -117,27 +118,24 @@ export async function searchDatasetData(props: SearchDatasetDataProps) {
 
     concatResults.sort((a, b) => b.score - a.score);
 
-    const formatResult = concatResults
-      .map((data, index) => {
-        if (!data.collectionId) {
-          console.log('Collection is not found', data);
-        }
+    const formatResult = concatResults.map((data, index) => {
+      if (!data.collectionId) {
+        console.log('Collection is not found', data);
+      }
 
-        const result: SearchDataResponseItemType = {
-          id: String(data._id),
-          q: data.q,
-          a: data.a,
-          chunkIndex: data.chunkIndex,
-          datasetId: String(data.datasetId),
-          collectionId: String(data.collectionId?._id),
-          sourceName: data.collectionId?.name || '',
-          sourceId: data.collectionId?.fileId || data.collectionId?.rawLink,
-          score: [{ type: SearchScoreTypeEnum.embedding, value: data.score, index }]
-        };
+      const result: SearchDataResponseItemType = {
+        id: String(data._id),
+        q: data.q,
+        a: data.a,
+        chunkIndex: data.chunkIndex,
+        datasetId: String(data.datasetId),
+        collectionId: String(data.collectionId?._id),
+        ...getCollectionSourceData(data.collectionId),
+        score: [{ type: SearchScoreTypeEnum.embedding, value: data.score, index }]
+      };
 
-        return result;
-      })
-      .filter((item) => item !== null) as SearchDataResponseItemType[];
+      return result;
+    });
 
     return {
       embeddingRecallResults: formatResult,
@@ -205,8 +203,7 @@ export async function searchDatasetData(props: SearchDatasetDataProps) {
           id: String(item._id),
           datasetId: String(item.datasetId),
           collectionId: String(item.collectionId),
-          sourceName: collection?.name || '',
-          sourceId: collection?.fileId || collection?.rawLink,
+          ...getCollectionSourceData(collection),
           q: item.q,
           a: item.a,
           chunkIndex: item.chunkIndex,

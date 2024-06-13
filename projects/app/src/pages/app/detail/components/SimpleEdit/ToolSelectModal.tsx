@@ -110,7 +110,6 @@ const ToolSelectModal = ({ onClose, ...props }: Props & { onClose: () => void })
       maxW={['90vw', '700px']}
       w={'700px'}
       h={['90vh', '80vh']}
-      overflow={'none'}
     >
       {/* Header: row and search */}
       <Box px={[3, 6]} pt={4} display={'flex'} justifyContent={'space-between'} w={'full'}>
@@ -342,7 +341,7 @@ const RenderList = React.memo(function RenderList({
                         );
                       }
                       if (input.valueType === WorkflowIOValueTypeEnum.boolean) {
-                        return <Switch size={'lg'} {...register(input.key, { required })} />;
+                        return <Switch {...register(input.key, { required })} />;
                       }
                       return (
                         <JsonEditor

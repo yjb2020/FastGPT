@@ -6,8 +6,8 @@ import { useTranslation } from 'next-i18next';
 import { useCopyData } from '@/web/common/hooks/useCopyData';
 import dynamic from 'next/dynamic';
 import MyIcon from '@fastgpt/web/components/common/Icon';
-import MyTooltip from '@/components/MyTooltip';
-import { flowNode2StoreNodes } from '@/components/core/workflow/utils';
+import MyTooltip from '@fastgpt/web/components/common/MyTooltip';
+import { uiWorkflow2StoreWorkflow } from '@/components/core/workflow/utils';
 import { putUpdatePlugin } from '@/web/core/plugin/api';
 import { useToast } from '@fastgpt/web/hooks/useToast';
 import MyMenu from '@fastgpt/web/components/common/MyMenu';
@@ -39,7 +39,7 @@ const Header = ({ plugin, onClose }: Props) => {
 
     const checkResults = checkWorkflowNodeAndConnection({ nodes, edges });
     if (!checkResults) {
-      const storeNodes = flowNode2StoreNodes({ nodes, edges });
+      const storeNodes = uiWorkflow2StoreWorkflow({ nodes, edges });
 
       return storeNodes;
     } else {
@@ -68,7 +68,7 @@ const Header = ({ plugin, onClose }: Props) => {
     }
   });
 
-  const onCopy = useCallback(async () => {
+  const onExportWorkflow = useCallback(async () => {
     const data = await flowData2StoreDataAndCheck();
     if (data) {
       copyData(
@@ -106,7 +106,7 @@ const Header = ({ plugin, onClose }: Props) => {
               }}
             />
           </MyTooltip>
-          <Box ml={[3, 5]} fontSize={['md', '2xl']} flex={1}>
+          <Box ml={[3, 5]} fontSize={['md', 'lg']} flex={1}>
             {plugin.name}
           </Box>
 
@@ -121,11 +121,19 @@ const Header = ({ plugin, onClose }: Props) => {
               />
             }
             menuList={[
-              { label: appT('Import Configs'), icon: 'common/importLight', onClick: onOpenImport },
               {
-                label: appT('Export Configs'),
-                icon: 'export',
-                onClick: onCopy
+                children: [
+                  {
+                    label: appT('Import Configs'),
+                    icon: 'common/importLight',
+                    onClick: onOpenImport
+                  },
+                  {
+                    label: appT('Export Configs'),
+                    icon: 'export',
+                    onClick: onExportWorkflow
+                  }
+                ]
               }
             ]}
           />
@@ -147,7 +155,7 @@ const Header = ({ plugin, onClose }: Props) => {
     isOpenImport,
     onClose,
     onCloseImport,
-    onCopy,
+    onExportWorkflow,
     onOpenImport,
     onclickSave,
     plugin.name,
